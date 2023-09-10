@@ -1,11 +1,14 @@
 {
-	"id": "obsidian-quire-sync",
-	"name": "Obsidian Quire Sync",
-	"version": "0.0.1",
-	"minAppVersion": "0.15.0",
-	"authorUrl": "http://joeconstant.com/",
-	"fundingUrl": "https://github.com/sponsors/lazyguru",
-	"description": "This is a plugin for Obsidian to sync tasks with Quire.io",
-	"author": "lazyguru",
-	"isDesktopOnly": false
+  "id": "obsidian-quire-sync",
+  "name": "Obsidian Quire Sync",
+  "version": "0.0.1",
+  "minAppVersion": "0.15.0",
+  "authorUrl": "http://joeconstant.com/",
+  "fundingUrl": {
+    "Buy Me a Coffee": "https://buymeacoffee.com",
+    "GitHub Sponsor": "https://github.com/sponsors/lazyguru"
+  },
+  "description": "This is a plugin for Obsidian to sync tasks with Quire.io",
+  "author": "lazyguru",
+  "isDesktopOnly": false
 }
