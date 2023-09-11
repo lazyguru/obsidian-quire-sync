@@ -1,4 +1,4 @@
-import { App, ButtonComponent, Editor, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting } from 'obsidian'
+import { App, Modal, Notice, Plugin, PluginSettingTab, Setting } from 'obsidian'
 
 interface OQSyncSettings {
   clientId: string
@@ -17,10 +17,14 @@ export default class OQSync extends Plugin {
     await this.loadSettings()
 
     // This creates an icon in the left ribbon.
-    const ribbonIconEl = this.addRibbonIcon('sync', 'OQSync', (evt: MouseEvent) => {
-      // Called when the user clicks the icon.
-      new Notice('Synced with Quire!')
-    })
+    const ribbonIconEl = this.addRibbonIcon(
+      'sync',
+      'OQSync',
+      (evt: MouseEvent) => {
+        // Called when the user clicks the icon.
+        new Notice('Synced with Quire!')
+      }
+    )
     // Perform additional things with the ribbon
     ribbonIconEl.addClass('oqsync-ribbon-class')
 
@@ -34,7 +38,7 @@ export default class OQSync extends Plugin {
       name: 'Authenticate with Quire',
       callback: () => {
         new QuireAuthModal(this.app).open()
-      }
+      },
     })
     // This adds a complex command that can check whether the current state of the app allows execution of the command
     this.addCommand({
@@ -53,7 +57,7 @@ export default class OQSync extends Plugin {
           // This command will only show up in Command Palette when the check function returns true
           return true
         }
-      }
+      },
     })
 
     // This adds a settings tab so the user can configure various aspects of the plugin
@@ -66,12 +70,12 @@ export default class OQSync extends Plugin {
     })
 
     // When registering intervals, this function will automatically clear the interval when the plugin is disabled.
-    this.registerInterval(window.setInterval(() => console.log('setInterval'), 5 * 60 * 1000))
+    this.registerInterval(
+      window.setInterval(() => console.log('setInterval'), 5 * 60 * 1000)
+    )
   }
 
-  onunload() {
-
-  }
+  onunload() {}
 
   async loadSettings() {
     this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData())
@@ -88,12 +92,12 @@ class QuireSyncModal extends Modal {
   }
 
   onOpen() {
-    const {contentEl} = this
+    const { contentEl } = this
     contentEl.setText('Woah!')
   }
 
   onClose() {
-    const {contentEl} = this
+    const { contentEl } = this
     contentEl.empty()
   }
 }
@@ -104,12 +108,12 @@ class QuireAuthModal extends Modal {
   }
 
   onOpen() {
-    const {contentEl} = this
+    const { contentEl } = this
     contentEl.setText('Woah!')
   }
 
   onClose() {
-    const {contentEl} = this
+    const { contentEl } = this
     contentEl.empty()
   }
 }
@@ -123,7 +127,7 @@ class OQSyncSettingTab extends PluginSettingTab {
   }
 
   display(): void {
-    const {containerEl} = this
+    const { containerEl } = this
 
     containerEl.empty()
 
@@ -131,27 +135,35 @@ class OQSyncSettingTab extends PluginSettingTab {
       .setHeading()
       .setName('Quire API Settings')
       .setDesc('Create these at https://quire.io/apps/dev')
-      .addButton((cb) => cb.setButtonText('Register app with Quire').onClick(() => window.open('https://quire.io/apps/dev')))
+      .addButton((cb) =>
+        cb
+          .setButtonText('Register app with Quire')
+          .onClick(() => window.open('https://quire.io/apps/dev'))
+      )
 
     new Setting(containerEl)
       .setName('Client ID')
       .setDesc('Client ID from Quire App (can be Development credentials)')
-      .addText(text => text
-        .setPlaceholder('Enter your client id')
-        .setValue(this.plugin.settings.clientId)
-        .onChange(async (value) => {
-          this.plugin.settings.clientId = value
-          await this.plugin.saveSettings()
-        }))
+      .addText((text) =>
+        text
+          .setPlaceholder('Enter your client id')
+          .setValue(this.plugin.settings.clientId)
+          .onChange(async (value) => {
+            this.plugin.settings.clientId = value
+            await this.plugin.saveSettings()
+          })
+      )
     new Setting(containerEl)
       .setName('Client Secret')
       .setDesc('Client Secret from Quire App (can be Development credentials)')
-      .addText(text => text
-        .setPlaceholder('Enter your client secret')
-        .setValue(this.plugin.settings.clientSecret)
-        .onChange(async (value) => {
-          this.plugin.settings.clientSecret = value
-          await this.plugin.saveSettings()
-        }))
+      .addText((text) =>
+        text
+          .setPlaceholder('Enter your client secret')
+          .setValue(this.plugin.settings.clientSecret)
+          .onChange(async (value) => {
+            this.plugin.settings.clientSecret = value
+            await this.plugin.saveSettings()
+          })
+      )
   }
 }
