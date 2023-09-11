@@ -1,4 +1,4 @@
-import { Notice, Plugin } from 'obsidian'
+import { Notice, Platform, Plugin } from 'obsidian'
 import { QuireAuthModal, QuireSyncModal } from './modals'
 import { DEFAULT_SETTINGS, OQSyncSettingTab, OQSyncSettings } from './settings'
 
@@ -28,8 +28,20 @@ export default class OQSync extends Plugin {
     this.addCommand({
       id: 'auth-with-quire',
       name: 'Authenticate with Quire',
-      callback: () => {
-        new QuireAuthModal(this.app).open()
+      checkCallback: (checking: boolean) => {
+        // We can only support authorizing on desktop because of node requirement
+        // However, the token is saved in the vault so syncing is still supported
+        // This is why the plugin isn't marked as isDesktopOnly
+        if (Platform.isDesktop) {
+          // If checking is true, we're simply "checking" if the command can be run.
+          // If checking is false, then we want to actually perform the operation.
+          if (!checking) {
+            new QuireAuthModal(this.app).open()
+          }
+          // This command will only show up in Command Palette when the check function returns true
+          return true
+        }
+        return false
       },
     })
     // This adds a complex command that can check whether the current state of the app allows execution of the command
