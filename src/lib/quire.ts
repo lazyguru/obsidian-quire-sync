@@ -39,4 +39,100 @@ TODO:
         "oid": "Dyh2YkFcu9uLgLFIeN1kB4Ld"
       }
       ```
+    - Get all projects where we can add tasks: `https://quire.io/api/project/list?add-task=true`
+      ```
+      [
+        {
+          "name": "My Project",
+          "id": "my_project",
+          "rootCount": 5,
+          "nameText": "My Project",
+          ...
+          "activeCount": 20,
+          "taskCount": 30,
+          "descriptionText": "This is cool!",
+          "description": "This is *cool*!",
+          ...
+          "oid": "Dyh2YkFcu9uLgLFIeN1kB4Ld",
+          ...
+        }
+      ]
+      ```
+    - Add a new task: `POST /task/{oid}` (oid can be project or parent task)
+      ```
+      {
+        "name": "Design new **logo**",
+        "yourField": "object",
+        "description": "This is a *cool* task.",
+        "tasks": [ # (Optional) A list of subtasks to create.
+          "#/definitions/CreateTaskBody"
+        ],
+        "tags": [ # OID or names of the tags to be added to the new created task. Note: if tag's name is specified, it is case-insensitive.
+          "X6nmx9XjEO2wKbqeB1pRT43C"
+        ],
+        "start": "2018-12-20T00:00:00.000Z",
+        "due": "2018-12-22T00:00:00.000Z",
+        "priority": 0, # An optional priority. Its value must be between -1 (lowest) and 2 (highest). Default: 0.
+        "status": 0, # An optional status. Its value must be between 0 and 100. Default: 0.
+        "etc": 0 # The estimated time to complete. If specified, it must be non-negative. Unit: seconds.
+      }
+      ```
+    - Get task by OID: `GET /task/{oid}`
+      Response:
+      ```
+      {
+        "oid": "Dyh2YkFcu9uLgLFIeN1kB4Ld",
+        "id": 12,
+        "name": "Design new **logo**",
+        "nameText": "Design new logo",
+        "descriptionText": "This is a cool task.",
+        "description": "This is a *cool* task.",
+        ...
+        "etc": 500,
+        "priority": 0,
+        "status": 0,
+        "start": "2018-12-20T00:00:00.000Z",
+        "due": "2018-12-22T00:00:00.000Z",
+        ...
+        "tags": [
+          "#/definitions/SimpleTaggingEntity"
+        ],
+        "order": 99,
+        ...
+        "childCount": 5,
+        "toggledAt": "2018-12-22T02:06:58.158Z",
+        "editedAt": "2018-12-22T02:06:58.158Z",
+        ...
+        "project": "#/definitions/SimpleIdentity",
+        "createdAt": "2018-12-22T02:06:58.158Z",
+      }
+      ```
+    - Get all tasks: `GET /task/list/{oid}` oid can be project or parent task
+    - Update task by OID: `PUT /task/{oid}`
+      ```
+      {
+        "name": "New idea",
+        ...
+        "yourField": "object",
+        "description": "This is a **cool** task.",
+        ...
+        "tags": [
+          "ITaVbkhh3iVcEcV3vuSLeE2k"
+        ],
+        "start": "2018-12-20T00:00:00.000Z",
+        "due": "2018-12-22T00:00:00.000Z",
+        "priority": 0,
+        "status": 100,
+        "etc": 0
+      }
+      ```
+    - Delete a task (and all subtasks): `DELETE /task/{oid}`
+
+    BEWARE Rate Limit: https://quire.io/dev/api/#rate-limits
+    Plan: Free
+    Maximum requests per organization, per minute: 25
+    Maximum requests per organization, per hour: 120
+
+    The size of each request can't be larger than 1MB.
+    Requests that hit this limit will receive a 413 Content too large response.
 */
