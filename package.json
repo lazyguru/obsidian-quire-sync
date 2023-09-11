@@ -1,25 +1,26 @@
 {
-	"name": "obsidian-quire-sync",
-	"version": "0.0.1",
-	"description": "This is a plugin for Obsidian (https://obsidian.md) to sync tasks with Quire (https://quire.io)",
-	"main": "main.js",
-	"scripts": {
-		"dev": "node esbuild.config.mjs",
-		"build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
-		"version": "node version-bump.mjs && git add manifest.json versions.json"
-	},
-	"keywords": [],
-	"author": "",
-	"license": "MIT",
-	"devDependencies": {
-		"@types/node": "^20.6.0",
-		"@typescript-eslint/eslint-plugin": "6.6.0",
-		"@typescript-eslint/parser": "6.6.0",
-		"builtin-modules": "3.3.0",
-		"esbuild": "0.19.2",
-		"obsidian": "latest",
-		"prettier": "^3.0.3",
-		"tslib": "2.6.2",
-		"typescript": "5.2.2"
-	}
+  "name": "obsidian-quire-sync",
+  "version": "0.0.1",
+  "description": "This is a plugin for Obsidian (https://obsidian.md) to sync tasks with Quire (https://quire.io)",
+  "main": "main.js",
+  "scripts": {
+    "dev": "node esbuild.config.mjs",
+    "build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
+    "version": "node version-bump.mjs && git add manifest.json versions.json",
+    "lint": "eslint"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^20.6.0",
+    "@typescript-eslint/eslint-plugin": "6.6.0",
+    "@typescript-eslint/parser": "6.6.0",
+    "builtin-modules": "3.3.0",
+    "esbuild": "0.19.2",
+    "obsidian": "latest",
+    "prettier": "^3.0.3",
+    "tslib": "2.6.2",
+    "typescript": "5.2.2"
+  }
 }
