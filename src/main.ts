@@ -20,10 +20,6 @@ export default class OQSync extends Plugin {
     // Perform additional things with the ribbon
     ribbonIconEl.addClass('oqsync-ribbon-class')
 
-    // This adds a status bar item to the bottom of the app. Does not work on mobile apps.
-    const statusBarItemEl = this.addStatusBarItem()
-    statusBarItemEl.setText('OQSync status: ???')
-
     // This adds a simple command that can be triggered anywhere
     this.addCommand({
       id: 'auth-with-quire',
