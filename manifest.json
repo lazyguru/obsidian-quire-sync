@@ -3,9 +3,9 @@
   "name": "Obsidian Quire Sync",
   "version": "0.0.1",
   "minAppVersion": "0.15.0",
-  "authorUrl": "http://joeconstant.com/",
+  "authorUrl": "https://github.com/lazyguru",
   "fundingUrl": {
-    "Buy Me a Coffee": "https://buymeacoffee.com",
+    "Buy Me a Coffee": "https://buymeacoffee.com/lazyguru",
     "GitHub Sponsor": "https://github.com/sponsors/lazyguru"
   },
   "description": "This is a plugin for Obsidian to sync tasks with Quire.io",

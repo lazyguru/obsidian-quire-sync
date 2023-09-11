@@ -22,4 +22,5 @@ This plugin allows the synchronization of tasks between Obsidian and [Quire](htt
 
 ## Support
 
+If you like this plugin or want to support further development, you can [Buy Me a Coffee](https://www.buymeacoffee.com/lazyguru) or support via [GitHub](https://github.com/sponsors/lazyguru).
 Please report bugs and request features in [GitHub Issues](https://github.com/lazyguru/obsidian-quire-sync/issues)
