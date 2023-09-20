@@ -32,7 +32,7 @@ export default class OQSync extends Plugin {
           // If checking is true, we're simply "checking" if the command can be run.
           // If checking is false, then we want to actually perform the operation.
           if (!checking) {
-            new QuireAuthModal(this.app).open()
+            new QuireAuthModal(this.app, this.settings, this.saveData.bind(this)).open()
           }
           // This command will only show up in Command Palette when the check function returns true
           return true
@@ -46,7 +46,7 @@ export default class OQSync extends Plugin {
       name: 'Sync with Quire',
       checkCallback: (checking: boolean) => {
         // Conditions to check
-        const hasAuthToken = false //TODO: Add check to see if we have an auth token
+        const hasAuthToken = this.settings.tokenData?.access_token != null
         if (hasAuthToken) {
           // If checking is true, we're simply "checking" if the command can be run.
           // If checking is false, then we want to actually perform the operation.
