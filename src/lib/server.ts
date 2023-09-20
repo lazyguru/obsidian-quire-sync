@@ -1,6 +1,6 @@
 import * as rm from 'typed-rest-client/RestClient'
 import * as http from 'http'
-import { OQSyncSettings, TokenData } from 'src/settings'
+import { OQSyncSettings } from 'src/settings'
 
 /**
   - Open browser for authentication https://quire.io/oauth?client_id=your-client-ID&redirect_uri=your-redirect-uri
@@ -27,7 +27,6 @@ import { OQSyncSettings, TokenData } from 'src/settings'
 
 async function postBack(settings: OQSyncSettings, code: string) {
   const data: string = `grant_type=authorization_code&code=${code}&client_id=${settings.clientId}&client_secret=${settings.clientSecret}`
-  console.log(data)
   const rest = getClient()
   const res = await rest.client.post(
     'https://quire.io/oauth/token',
@@ -37,9 +36,7 @@ async function postBack(settings: OQSyncSettings, code: string) {
       'Accept': 'application/json',
     }
   )
-  const tokenData = JSON.parse(await res.readBody())
-  console.log(tokenData)
-  settings.tokenData = tokenData
+  settings.tokenData = JSON.parse(await res.readBody())
 }
 
 export function startServer(
@@ -52,10 +49,8 @@ export function startServer(
     req: http.IncomingMessage,
     res
   ) {
-    console.log(req.url)
     const url = new URL(`http://${host}:${port}/${req.url}`)
     const code = url.searchParams.get('code')
-    console.log(code)
     if (code === null) {
       res.writeHead(400)
       res.end('Code is missing or invalid')
