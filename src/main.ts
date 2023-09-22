@@ -1,6 +1,9 @@
-import { Notice, Platform, Plugin } from 'obsidian'
-import { QuireAuthModal, QuireSyncModal } from './modals'
+import { Notice, Platform, Plugin, Editor, MarkdownView } from 'obsidian'
+import { QuireAuthModal } from './modals'
 import { DEFAULT_SETTINGS, OQSyncSettingTab, OQSyncSettings } from './settings'
+import { syncTask, toggleServerTaskStatus } from './taskmanager'
+
+export const PLUGIN_NAME = 'Obsidian Quire Sync'
 
 export default class OQSync extends Plugin {
   settings: OQSyncSettings
@@ -19,7 +22,18 @@ export default class OQSync extends Plugin {
     )
     // Perform additional things with the ribbon
     ribbonIconEl.addClass('oqsync-ribbon-class')
-
+		this.addCommand({
+      id: 'toggle-quire-task',
+      name: 'Toggle Quire task',
+      editorCallback: (editor: Editor, view: MarkdownView) => {
+        if (this.settings.tokenData === undefined) {
+          return
+        }
+        toggleServerTaskStatus(editor, this.settings.tokenData.access_token)
+        // @ts-ignore undocumented but was recommended to use here - https://github.com/obsidianmd/obsidian-releases/pull/768#issuecomment-1038441881
+        view.app.commands.executeCommandById('editor:toggle-checklist-status')
+      },
+    })
     // This adds a simple command that can be triggered anywhere
     this.addCommand({
       id: 'auth-with-quire',

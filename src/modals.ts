@@ -33,8 +33,7 @@ export class QuireAuthModal extends Modal {
     const { contentEl } = this
     contentEl.setText('Please complete authentication in your browser (leave this modal open until complete)')
     const host = 'localhost'
-    // Can't use random port because of "invalid_request: The 'redirect_uri' parameter does not match a valid url for the application."
-    const port = 8080 // randomInt(8100, 8199)
+    const port = 8080
 
     this.server = startServer(host, port, this.settings, this.saveSettings)
     window.open(

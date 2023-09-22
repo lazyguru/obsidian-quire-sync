@@ -1,3 +1,6 @@
+import * as hm from 'typed-rest-client/Handlers'
+import * as rm from 'typed-rest-client/RestClient'
+
 /*
 TODO:
   - After auth:
@@ -116,3 +119,50 @@ TODO:
     The size of each request can't be larger than 1MB.
     Requests that hit this limit will receive a 413 Content too large response.
 */
+
+export interface Task {
+  id: number
+  parentId: number
+  name: string
+  description: string
+  tags: string[]
+  start: Date
+  due: Date
+  priority: number
+  status: {
+    color: string
+    name: string
+    value: number
+  }
+  etc: number
+}
+export default class QuireApi {
+  async reopenTask(taskId: string): Promise<Task|null> {
+    return (
+      await this.client.replace<Task>(`/api/task/${taskId}`, { status: 0 })
+    ).result
+  }
+  async closeTask(taskId: string): Promise<Task|null> {
+    console.log(await this.getTask(taskId))
+    return (
+      await this.client.replace<Task>(`/api/task/${taskId}`, { status: 100 })
+    ).result
+  }
+  client: rm.RestClient
+  constructor(accessToken: string) {
+    this.client = new rm.RestClient('obsidian-quire-sync', 'https://quire.io', [
+      new hm.BearerCredentialHandler(accessToken),
+    ])
+  }
+  async getTask(oid: string): Promise<Task | null> {
+    return (await this.client.get<Task>(`/api/task/${oid}`)).result
+  }
+  async getTasks(oid?: string): Promise<unknown | Task[]> {
+    if (oid) {
+      return (
+        (await this.client.get<Task[]>(`/api/task/list/id/${oid}`)).result ?? []
+      )
+    }
+    return (await this.client.get('/api/task/list/')).result ?? []
+  }
+}
