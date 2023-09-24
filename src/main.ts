@@ -1,27 +1,34 @@
 import { Notice, Platform, Plugin, Editor, MarkdownView } from 'obsidian'
 import { QuireAuthModal } from './modals'
 import { DEFAULT_SETTINGS, OQSyncSettingTab, OQSyncSettings } from './settings'
-import { syncTask, toggleServerTaskStatus } from './taskmanager'
+import { pushTask, toggleServerTaskStatus } from './taskmanager'
 
 export const PLUGIN_NAME = 'Obsidian Quire Sync'
 
 export default class OQSync extends Plugin {
   settings: OQSyncSettings
 
+  async syncWithQuire(e: Editor) {
+    const item = this.addStatusBarItem()
+    item.createEl('span', { text: 'Syncing with Quire...' })
+    if (!this.settings.tokenData?.access_token) {
+				new Notice(PLUGIN_NAME + ": Please authenticate using a desktop version of Obsidian");
+				throw PLUGIN_NAME + ': missing access token.'
+    }
+    if (e === null) {
+      new Notice(
+        'Obsidian Quire Sync: Please open a file before attempting to sync with Quire'
+      )
+      return
+    }
+    await pushTask(e, this.settings.tokenData.access_token)
+    item.remove()
+    new Notice('Synced with Quire!')
+  }
+
   async onload() {
     await this.loadSettings()
 
-    // This creates an icon in the left ribbon.
-    const ribbonIconEl = this.addRibbonIcon(
-      'sync',
-      'OQSync',
-      (evt: MouseEvent) => {
-        // Called when the user clicks the icon.
-        new Notice('Synced with Quire!')
-      }
-    )
-    // Perform additional things with the ribbon
-    ribbonIconEl.addClass('oqsync-ribbon-class')
 		this.addCommand({
       id: 'toggle-quire-task',
       name: 'Toggle Quire task',
@@ -34,7 +41,6 @@ export default class OQSync extends Plugin {
         view.app.commands.executeCommandById('editor:toggle-checklist-status')
       },
     })
-    // This adds a simple command that can be triggered anywhere
     this.addCommand({
       id: 'auth-with-quire',
       name: 'Authenticate with Quire',
@@ -54,23 +60,15 @@ export default class OQSync extends Plugin {
         return false
       },
     })
-    // This adds a complex command that can check whether the current state of the app allows execution of the command
     this.addCommand({
       id: 'sync-with-quire',
       name: 'Sync with Quire',
-      checkCallback: (checking: boolean) => {
-        // Conditions to check
-        const hasAuthToken = this.settings.tokenData?.access_token != null
-        if (hasAuthToken) {
-          // If checking is true, we're simply "checking" if the command can be run.
-          // If checking is false, then we want to actually perform the operation.
-          if (!checking) {
-            new QuireSyncModal(this.app).open()
-          }
-
-          // This command will only show up in Command Palette when the check function returns true
-          return true
+      editorCallback: (editor: Editor, view: MarkdownView) => {
+        if (this.settings.tokenData === undefined) {
+          // TODO: Throw an error and tell user to auth via Desktop
+          return
         }
+        this.syncWithQuire(editor)
       },
     })
 

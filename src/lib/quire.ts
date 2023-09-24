@@ -122,28 +122,58 @@ TODO:
 
 export interface Task {
   id: number
+  oid: string
   parentId: number
   name: string
-  description: string
-  tags: string[]
-  start: Date
-  due: Date
-  priority: number
-  status: {
-    color: string
-    name: string
-    value: number
-  }
-  etc: number
+  description?: string
+  tags?: string[]
+  start?: Date
+  due?: Date
+  priority: TaskPriority
+  status: TaskStatus
+  etc?: number
+  recurring: TaskRecurring|null
+}
+
+export interface TaskPriority {
+  name: string
+  value: number
+}
+
+export interface TaskRecurring {
+  type: number // 0=weekly, 1=monthly, 2=yearly, 3=custom
+  data?: number // It depends on the type of this recurring. If weekly, bit 0 is Sunday, bit 1 is Monday and so on. For example, if the data is 6, it means every Monday and Tuesday.
+  rate: number // How often this recurring shall occur. If the rate is 2 and the type is weekly, it means it shall occur every two week. If the type is custom, it means number of days to repeat.
+  end?: string // When this recurring shall end. If not specified, it means it is never end.
+}
+
+export interface TaskStatus {
+  color?: string
+  name: string
+  value: number
 }
 export default class QuireApi {
+  async updateTask(task: Task) {
+     return (
+      await this.client.replace<Task>(`/api/task/${task.oid}`, {
+        name: task.name,
+        description: task.description,
+        status: task.status.value,
+        priority: task.priority.value,
+        tags: task.tags,
+        etc: task.etc,
+        start: task.start ? task.start.toISOString().substring(0, 10) : null,
+        due: task.due ? task.due.toISOString().substring(0, 10) : null,
+        recurring: task.recurring,
+      })
+    ).result
+  }
   async reopenTask(taskId: string): Promise<Task|null> {
     return (
       await this.client.replace<Task>(`/api/task/${taskId}`, { status: 0 })
     ).result
   }
   async closeTask(taskId: string): Promise<Task|null> {
-    console.log(await this.getTask(taskId))
     return (
       await this.client.replace<Task>(`/api/task/${taskId}`, { status: 100 })
     ).result
@@ -155,7 +185,12 @@ export default class QuireApi {
     ])
   }
   async getTask(oid: string): Promise<Task | null> {
-    return (await this.client.get<Task>(`/api/task/${oid}`)).result
+    const res = (await this.client.get<Task>(`/api/task/${oid}`))
+    if (res.statusCode >= 200 && res.statusCode < 300 && res.result !== null) {
+      return res.result
+    }
+    console.log(`API returned status: ${res.statusCode}`)
+    return null
   }
   async getTasks(oid?: string): Promise<unknown | Task[]> {
     if (oid) {

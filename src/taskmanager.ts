@@ -1,4 +1,4 @@
-import QuireApi from './lib/quire'
+import QuireApi, { Task, TaskPriority, TaskStatus, TaskRecurring } from './lib/quire'
 import { Editor, Notice } from 'obsidian'
 import { PLUGIN_NAME } from './main'
 
@@ -18,6 +18,42 @@ function getTaskId(lineText: string): string|false {
   } catch (e) {
     console.log(e)
     return false
+  }
+}
+
+export async function pushTask(e: Editor, access_token: string) {
+  try {
+    const lineText = e.getLine(e.getCursor().line)
+    const taskId = getTaskId(lineText)
+    if (taskId === false) {
+      return
+    }
+    const api = new QuireApi(access_token)
+    const task = await api.getTask(taskId)
+    if (task === null) {
+      return
+    }
+    const updateTask: Task = {
+      id: task.id,
+      oid: task.oid,
+      parentId: task.parentId,
+      name: getTaskName(lineText),
+      status: getTaskStatus(lineText),
+      priority: getTaskPriority(lineText),
+      due: getTaskDue(lineText),
+      start: getTaskStart(lineText),
+      tags: task.tags,
+      etc: task.etc,
+      description: task.description,
+      // description = getTaskDescription(lineText)
+      recurring: getTaskRecurring(lineText),
+    }
+    await api.updateTask(updateTask)
+  } catch (e) {
+    console.log(`${PLUGIN_NAME} error: `, e)
+    new Notice(
+      `${PLUGIN_NAME}: Error trying to sync task. See console log for more details.`
+    )
   }
 }
 
@@ -104,4 +140,149 @@ export async function toggleServerTaskStatus(
       `${PLUGIN_NAME}: Error trying to update task status. See console log for more details.`
     )
   }
+}
+function getTaskName(lineText: string): string {
+  const taskNameRegex = /^\s*-\s\[(?:\s|\S)\]\s([^\p{ExtPict}]+)(?:\s[\p{ExtPict}]|@QuireId:)*/u
+  const matches = taskNameRegex.exec(lineText)
+  if (matches !== null && matches.length > 1) {
+    return matches[1].trim()
+  }
+  return ''
+}
+
+/*
+Possible task fields:
+ - [ ] Test task 📅 2023-09-21 🛫 2023-09-21 ⏳ 2023-09-21 ⏫ 🔁 every day ➕ 2023-09-21 ✅ 2023-09-23 @QuireId:qyXJelLSDMQNrAjtH9CSuc1v
+
+ Name: Test task
+ Due: 📅 2023-09-21
+ Start: 🛫 2023-09-21
+ Scheduled: ⏳ 2023-09-21
+ Priority: (one of: [🔺,⏫,🔼,🔽,⏬])
+ Recurring: 🔁 every day|week|month
+ Created: ➕ 2023-09-21
+ Done: ✅ 2023-09-23
+ QuireID: @QuireId:qyXJelLSDMQNrAjtH9CSuc1v
+*/
+
+function getTaskStatus(lineText: string): TaskStatus {
+  const isClosedRegex = /^\s*- \[(x|X)]/
+  const isInProgressRegex = /^\s*- \[(\\)]/
+  const closed = isClosedRegex.test(lineText)
+  const inProgress = isInProgressRegex.test(lineText)
+  if (closed) {
+    return {
+      name: 'Completed',
+      value: 100
+    } as TaskStatus
+  }
+  if (inProgress) {
+    return {
+      name: 'Doing',
+      value: 50
+    } as TaskStatus
+  }
+  return {
+    name: 'To-Do',
+    value: 0
+  } as TaskStatus
+}
+
+function getTaskPriority(lineText: string): TaskPriority {
+  const priorityRegex = /[🔺⏫🔼🔽⏬]/u
+  const priority = priorityRegex.exec(lineText)
+  if (priority !== null && priority.length > 0) {
+    const value = String.fromCharCode(parseInt(priority[0], 16))
+    switch (value) {
+      case '⏬':
+        return {
+          name: 'Low',
+          value: -1,
+        }
+      case '🔽':
+        // low and medium get treated as 'default' because Quire only supports
+        // 4 priorities. This will be a problem on parsing the results back
+        // from the server as a task that was initially set as 🔽 might now get
+        // set as 🔼 since we have to pick one
+      case '🔼':
+        return {
+          name: 'Medium',
+          value: 0,
+        }
+      case '⏫':
+        return {
+          name: 'High',
+          value: 1,
+        }
+      case '🔺':
+        return {
+          name: 'Urgent',
+          value: 2,
+        }
+    }
+  }
+  // If we don't match, then return 'default', because the user might not
+  // have set a priority previously
+  return {
+    name: 'Medium',
+    value: 0,
+  }
+}
+
+function getTaskStart(lineText: string): Date | undefined {
+  return getDateMatch(lineText, '🛫')
+}
+
+function getTaskDue(lineText: string): Date | undefined {
+  const match = getDateMatch(lineText, '📅')
+  console.log('due', match)
+  return match
+}
+
+function getScheduled(lineText: string): Date | undefined {
+  return getDateMatch(lineText, '⏳')
+}
+
+function getDateMatch(lineText: string, emoji: string): Date | undefined {
+  const regexString = `${emoji} *(\\d{4}-\\d{2}-\\d{2})`
+  const dateRegex = new RegExp(regexString, 'u')
+  const date = dateRegex.exec(lineText)
+  if (date !== null && date.length > 0) {
+    return new Date(date[0])
+  }
+  return undefined
+}
+function getTaskRecurring(lineText: string): TaskRecurring | null {
+  const recurringRegex = /🔁(?: ?every ?)?(day|week|month|year)?(?: on )?(monday|tuesday|wednesday|thursday|friday|saturday|sunday)?/mui
+  const recurring = recurringRegex.exec(lineText)
+  console.log(recurring)
+  if (recurring !== null && recurring.length > 0) {
+    switch (recurring[1]) {
+      case undefined:
+      case 'day':
+        return {
+          type: 3,
+          rate: 1,
+        }
+      case 'week':
+        return {
+          type: 0,
+          // data: 1, // need to calculate this
+          rate: 1,
+        }
+      case 'month':
+        return {
+          type: 1,
+          // data: 1, // need to calculate this
+          rate: 1,
+        }
+      case 'year':
+        return {
+          type: 2,
+          // data: 1, // need to calculate this
+          rate: 1,
+        }
+    }
+  }
+  return null
 }
