@@ -11,7 +11,7 @@ export default class OQSync extends Plugin {
   async syncWithQuire(e: Editor) {
     const item = this.addStatusBarItem()
     item.createEl('span', { text: 'Syncing with Quire...' })
-    if (!this.settings.tokenData?.access_token) {
+    if (this.settings.tokenData === undefined) {
 				new Notice(PLUGIN_NAME + ": Please authenticate using a desktop version of Obsidian");
 				throw PLUGIN_NAME + ': missing access token.'
     }
@@ -21,7 +21,7 @@ export default class OQSync extends Plugin {
       )
       return
     }
-    await pushTask(e, this.settings.tokenData.access_token)
+    await pushTask(e, this.settings)
     item.remove()
     new Notice('Synced with Quire!')
   }
@@ -36,7 +36,7 @@ export default class OQSync extends Plugin {
         if (this.settings.tokenData === undefined) {
           return
         }
-        toggleServerTaskStatus(editor, this.settings.tokenData.access_token)
+        toggleServerTaskStatus(editor, this.settings)
         // @ts-ignore undocumented but was recommended to use here - https://github.com/obsidianmd/obsidian-releases/pull/768#issuecomment-1038441881
         view.app.commands.executeCommandById('editor:toggle-checklist-status')
       },

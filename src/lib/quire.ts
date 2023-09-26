@@ -126,7 +126,7 @@ export interface Task {
   parentId: number
   name: string
   description?: string
-  tags?: string[]
+  tags?: Tag[]
   start?: Date
   due?: Date
   priority: TaskPriority
@@ -152,15 +152,36 @@ export interface TaskStatus {
   name: string
   value: number
 }
+export interface Tag {
+  oid: string
+  name: string
+  global: boolean
+}
 export default class QuireApi {
+  async createTag(tagName: string): Promise<void> {
+    const res = await this.client.create(`/api/tag/id/${this.projectId}`, {name:tagName, global: true})
+    if (res.statusCode >= 200 && res.statusCode < 300 && res.result !== null) {
+      return
+    }
+    console.log(`API returned status: ${res.statusCode}`)
+    throw Error(`Failed to create tag: ${tagName}`)
+  }
+  async getAllTags(): Promise<Tag[]> {
+    const res = await this.client.get<Tag[]>(`/api/tag/list/id/${this.projectId}`)
+    if (res.statusCode >= 200 && res.statusCode < 300 && res.result !== null) {
+      return res.result
+    }
+    console.log(`API returned status: ${res.statusCode}`)
+    return []
+  }
   async updateTask(task: Task) {
      return (
       await this.client.replace<Task>(`/api/task/${task.oid}`, {
         name: task.name,
         description: task.description,
         status: task.status.value,
-        priority: task.priority.value,
-        tags: task.tags,
+       priority: task.priority.value,
+         tags: task.tags ? task.tags.map((t) => t.name) : undefined,
         etc: task.etc,
         start: task.start ? task.start.toISOString().substring(0, 10) : null,
         due: task.due ? task.due.toISOString().substring(0, 10) : null,
@@ -179,10 +200,12 @@ export default class QuireApi {
     ).result
   }
   client: rm.RestClient
-  constructor(accessToken: string) {
+  projectId: string
+  constructor(accessToken: string, projectId: string) {
     this.client = new rm.RestClient('obsidian-quire-sync', 'https://quire.io', [
       new hm.BearerCredentialHandler(accessToken),
     ])
+    this.projectId = projectId
   }
   async getTask(oid: string): Promise<Task | null> {
     const res = (await this.client.get<Task>(`/api/task/${oid}`))

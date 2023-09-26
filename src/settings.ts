@@ -12,6 +12,7 @@ export interface OQSyncSettings {
   tokenData?: TokenData
   clientId: string
   clientSecret: string
+  defaultProject?: string
 }
 
 export const DEFAULT_SETTINGS: OQSyncSettings = {
@@ -63,6 +64,19 @@ export class OQSyncSettingTab extends PluginSettingTab {
           .setValue(this.plugin.settings.clientSecret)
           .onChange(async (value) => {
             this.plugin.settings.clientSecret = value
+            await this.plugin.saveSettings()
+          })
+      )
+    new Setting(containerEl)
+      .setName('Default Project')
+      .setDesc('The ID of a project to use as default when none is specified in frontmatter')
+      .setTooltip('The value of <PROJECT_ID> from https://quire.io/w/<PROJECT_ID>')
+      .addText((text) =>
+        text
+          .setPlaceholder('Enter project ID from Quire URL')
+          .setValue(this.plugin.settings.defaultProject ?? '')
+          .onChange(async (value) => {
+            this.plugin.settings.defaultProject = value
             await this.plugin.saveSettings()
           })
       )

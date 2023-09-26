@@ -1,6 +1,7 @@
-import QuireApi, { Task, TaskPriority, TaskStatus, TaskRecurring } from './lib/quire'
+import QuireApi, { Task, TaskPriority, TaskStatus, TaskRecurring, Tag } from './lib/quire'
 import { Editor, Notice } from 'obsidian'
 import { PLUGIN_NAME } from './main'
+import { OQSyncSettings } from './settings'
 
 function getTaskId(lineText: string): string|false {
   // The line must start with only whitespace, then have a dash. A currently checked off box
@@ -21,14 +22,20 @@ function getTaskId(lineText: string): string|false {
   }
 }
 
-export async function pushTask(e: Editor, access_token: string) {
+export async function pushTask(e: Editor, settings: OQSyncSettings) {
   try {
+    if (settings.tokenData === undefined) {
+      new Notice(PLUGIN_NAME + ": Please authenticate using a desktop version of Obsidian");
+      throw PLUGIN_NAME + ': missing access token.'
+    }
+    const access_token = settings.tokenData.access_token
     const lineText = e.getLine(e.getCursor().line)
     const taskId = getTaskId(lineText)
     if (taskId === false) {
       return
     }
-    const api = new QuireApi(access_token)
+    const projectId = settings.defaultProject ?? ''
+    const api = new QuireApi(access_token, projectId)
     const task = await api.getTask(taskId)
     if (task === null) {
       return
@@ -42,11 +49,17 @@ export async function pushTask(e: Editor, access_token: string) {
       priority: getTaskPriority(lineText),
       due: getTaskDue(lineText),
       start: getTaskStart(lineText),
-      tags: task.tags,
+      tags: getTaskTags(lineText, task.tags),
       etc: task.etc,
       description: task.description,
       // description = getTaskDescription(lineText)
       recurring: getTaskRecurring(lineText),
+    }
+    if (updateTask.tags !== undefined) {
+      const tags = await api.getAllTags()
+      const tagNames = tags.map((t) => t.name)
+      const missingTags = updateTask.tags.filter((t) => !tagNames.contains(t.name))
+      missingTags.map(async (t) => await api.createTag(t.name))
     }
     await api.updateTask(updateTask)
   } catch (e) {
@@ -59,16 +72,22 @@ export async function pushTask(e: Editor, access_token: string) {
 
 export async function toggleServerTaskStatus(
   e: Editor,
-  access_token: string
+  settings: OQSyncSettings
 ) {
   try {
+    if (settings.tokenData === undefined) {
+      new Notice(PLUGIN_NAME + ": Please authenticate using a desktop version of Obsidian");
+      throw PLUGIN_NAME + ': missing access token.'
+    }
+    const access_token = settings.tokenData.access_token
     const lineText = e.getLine(e.getCursor().line)
     const taskId = getTaskId(lineText)
     if (taskId === false) {
       return
     }
 
-    const api = new QuireApi(access_token)
+    const projectId = settings.defaultProject ?? ''
+    const api = new QuireApi(access_token, projectId)
     const task = (await api.getTask(taskId))
     if (task === null) {
       return
@@ -285,4 +304,18 @@ function getTaskRecurring(lineText: string): TaskRecurring | null {
     }
   }
   return null
+}
+
+function getTaskTags(lineText: string, initTags?: Tag[]): Tag[] | undefined {
+  const tags: string[] = []
+  if (initTags !== undefined) {
+    initTags.filter((t) => t.name !== null).map((t) => tags.push(t.name))
+  }
+  const tagsRegex = /#([a-z0-9_]+)/uig
+  const match = lineText.match(tagsRegex)
+  console.log('Match', match)
+  if (match !== null && match.length > 0) {
+    match.map((m) => tags.push(m.replace('#', '')))
+  }
+  return tags.length > 0 ? tags.unique().map((tn) => ({ name: tn } as Tag)) : undefined
 }
