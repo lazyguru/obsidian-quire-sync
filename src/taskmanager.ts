@@ -10,12 +10,12 @@ function getTaskId(lineText: string): string|false {
   const isTaskRegex = /^\s*- \[(\s|\S)]/
   const isTask = isTaskRegex.test(lineText)
 
-  if (!lineText.contains('@QuireId:') && isTask) {
+  if (!lineText.contains('[QuireId:') && isTask) {
     return false
   }
 
   try {
-    return lineText.split('@QuireId:')[1].split(' ')[0]
+    return lineText.split('[QuireId:')[1].split(']')[0]
   } catch (e) {
     console.log(e)
     return false
@@ -161,7 +161,7 @@ export async function toggleServerTaskStatus(
   }
 }
 function getTaskName(lineText: string): string {
-  const taskNameRegex = /^\s*-\s\[(?:\s|\S)\]\s([^\p{ExtPict}]+)(?:\s[\p{ExtPict}]|@QuireId:)*/u
+  const taskNameRegex = /^\s*-\s\[(?:\s|\S)\]\s([^\p{ExtPict}\[]+)(?:\s[\p{ExtPict}]|\[QuireId:.*\])*/u
   const matches = taskNameRegex.exec(lineText)
   if (matches !== null && matches.length > 1) {
     return matches[1].trim()
@@ -171,7 +171,7 @@ function getTaskName(lineText: string): string {
 
 /*
 Possible task fields:
- - [ ] Test task 📅 2023-09-21 🛫 2023-09-21 ⏳ 2023-09-21 ⏫ 🔁 every day ➕ 2023-09-21 ✅ 2023-09-23 @QuireId:qyXJelLSDMQNrAjtH9CSuc1v
+ - [ ] Test task [QuireId:qyXJelLSDMQNrAjtH9CSuc1v] 📅 2023-09-21 🛫 2023-09-21 ⏳ 2023-09-21 ⏫ 🔁 every day ➕ 2023-09-21 ✅ 2023-09-23
 
  Name: Test task
  Due: 📅 2023-09-21
@@ -274,7 +274,6 @@ function getDateMatch(lineText: string, emoji: string): Date | undefined {
 function getTaskRecurring(lineText: string): TaskRecurring | null {
   const recurringRegex = /🔁(?: ?every ?)?(day|week|month|year)?(?: on )?(monday|tuesday|wednesday|thursday|friday|saturday|sunday)?/mui
   const recurring = recurringRegex.exec(lineText)
-  console.log(recurring)
   if (recurring !== null && recurring.length > 0) {
     switch (recurring[1]) {
       case undefined:
