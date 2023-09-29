@@ -1,3 +1,4 @@
+import { PLUGIN_NAME } from 'src/main'
 import * as hm from 'typed-rest-client/Handlers'
 import * as rm from 'typed-rest-client/RestClient'
 
@@ -121,14 +122,17 @@ TODO:
 */
 
 export interface Task {
-  id: number
-  oid: string
-  parentId: number
+  id?: number
+  oid?: string
+  parentId?: number
   name: string
   description?: string
   tags?: Tag[]
-  start?: Date
-  due?: Date
+  created?: string
+  start?: string
+  scheduled?: string
+  due?: string
+  toggledAt?: string
   priority: TaskPriority
   status: TaskStatus
   etc?: number
@@ -158,47 +162,6 @@ export interface Tag {
   global: boolean
 }
 export default class QuireApi {
-  async createTag(tagName: string): Promise<void> {
-    const res = await this.client.create(`/api/tag/id/${this.projectId}`, {name:tagName, global: true})
-    if (res.statusCode >= 200 && res.statusCode < 300 && res.result !== null) {
-      return
-    }
-    console.log(`API returned status: ${res.statusCode}`)
-    throw Error(`Failed to create tag: ${tagName}`)
-  }
-  async getAllTags(): Promise<Tag[]> {
-    const res = await this.client.get<Tag[]>(`/api/tag/list/id/${this.projectId}`)
-    if (res.statusCode >= 200 && res.statusCode < 300 && res.result !== null) {
-      return res.result
-    }
-    console.log(`API returned status: ${res.statusCode}`)
-    return []
-  }
-  async updateTask(task: Task) {
-     return (
-      await this.client.replace<Task>(`/api/task/${task.oid}`, {
-        name: task.name,
-        description: task.description,
-        status: task.status.value,
-       priority: task.priority.value,
-         tags: task.tags ? task.tags.map((t) => t.name) : undefined,
-        etc: task.etc,
-        start: task.start ? task.start.toISOString().substring(0, 10) : null,
-        due: task.due ? task.due.toISOString().substring(0, 10) : null,
-        recurring: task.recurring,
-      })
-    ).result
-  }
-  async reopenTask(taskId: string): Promise<Task|null> {
-    return (
-      await this.client.replace<Task>(`/api/task/${taskId}`, { status: 0 })
-    ).result
-  }
-  async closeTask(taskId: string): Promise<Task|null> {
-    return (
-      await this.client.replace<Task>(`/api/task/${taskId}`, { status: 100 })
-    ).result
-  }
   client: rm.RestClient
   projectId: string
   constructor(accessToken: string, projectId: string) {
@@ -207,13 +170,81 @@ export default class QuireApi {
     ])
     this.projectId = projectId
   }
-  async getTask(oid: string): Promise<Task | null> {
-    const res = (await this.client.get<Task>(`/api/task/${oid}`))
+  async createTask(task: Task, parentId?: string): Promise<Task> {
+    let root = this.projectId
+    if (parentId !== undefined) {
+      root = parentId
+    }
+    const res = await this.client.create<Task>(`/api/task/id/${root}`, {
+      name: task.name,
+      description: task.description,
+      status: task.status.value,
+      priority: task.priority.value,
+      tags: task.tags ? task.tags.map((t) => t.name) : undefined,
+      etc: task.etc,
+      start: task.start ? task.start.substring(0, 10) : null,
+      due: task.due ? task.due.substring(0, 10) : null,
+      recurring: task.recurring,
+    })
     if (res.statusCode >= 200 && res.statusCode < 300 && res.result !== null) {
       return res.result
     }
-    console.log(`API returned status: ${res.statusCode}`)
-    return null
+    console.error(`API returned status: ${res.statusCode}`)
+    throw Error(`${PLUGIN_NAME}: Failed to create task: ${task.name}`)
+  }
+  async createTag(tagName: string): Promise<void> {
+    const res = await this.client.create(`/api/tag/id/${this.projectId}`, {
+      name: tagName,
+      global: true,
+    })
+    if (res.statusCode >= 200 && res.statusCode < 300 && res.result !== null) {
+      return
+    }
+    console.error(`API returned status: ${res.statusCode}`)
+    throw Error(`Failed to create tag: ${tagName}`)
+  }
+  async getAllTags(): Promise<Tag[]> {
+    const res = await this.client.get<Tag[]>(
+      `/api/tag/list/id/${this.projectId}`
+    )
+    if (res.statusCode >= 200 && res.statusCode < 300 && res.result !== null) {
+      return res.result
+    }
+    console.error(`API returned status: ${res.statusCode}`)
+    return []
+  }
+  async updateTask(task: Task) {
+    return (
+      await this.client.replace<Task>(`/api/task/${task.oid}`, {
+        name: task.name,
+        description: task.description,
+        status: task.status.value,
+        priority: task.priority.value,
+        tags: task.tags ? task.tags.map((t) => t.name) : undefined,
+        etc: task.etc,
+        start: task.start ? task.start.substring(0, 10) : null,
+        due: task.due ? task.due.substring(0, 10) : null,
+        recurring: task.recurring,
+      })
+    ).result
+  }
+  async reopenTask(taskId: string): Promise<Task | null> {
+    return (
+      await this.client.replace<Task>(`/api/task/${taskId}`, { status: 0 })
+    ).result
+  }
+  async closeTask(taskId: string): Promise<Task | null> {
+    return (
+      await this.client.replace<Task>(`/api/task/${taskId}`, { status: 100 })
+    ).result
+  }
+  async getTask(oid: string): Promise<Task> {
+    const res = await this.client.get<Task>(`/api/task/${oid}`)
+    if (res.statusCode >= 200 && res.statusCode < 300 && res.result !== null) {
+      return res.result
+    }
+    console.error(`API returned status: ${res.statusCode}`)
+    throw Error(`${PLUGIN_NAME}: Unable to retrieve task from Quire API`)
   }
   async getTasks(oid?: string): Promise<unknown | Task[]> {
     if (oid) {

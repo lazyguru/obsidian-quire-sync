@@ -7,6 +7,7 @@ This plugin allows the synchronization of tasks between Obsidian and [Quire](htt
 
 - Adds a command "Push to Quire" which pushes tasks to Quire.
 - Adds a command "Pull from Quire" which pulls tasks from Quire.
+- Adds a command "Toggle Quire task" to mark a task as done/reopened in Quire.
 - Adds a command "Authenticate with Quire" which authenticates with Quire and retrieves a refresh-token for use in interacting with the Quire API.
   - NOTE: This command is only available on desktop. However, the auth token is saved and usable on mobile if you have sync setup (can be Obsidian Sync or another form of sync)
 
