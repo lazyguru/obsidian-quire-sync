@@ -13,10 +13,13 @@ export default class OQSync extends Plugin {
     const item = this.addStatusBarItem()
     item.createEl('span', { text: 'Syncing with Quire...' })
     if (this.settings.tokenData === undefined) {
-				new Notice(PLUGIN_NAME + ": Please authenticate using a desktop version of Obsidian");
-				throw PLUGIN_NAME + ': missing access token.'
+      new Notice(
+        PLUGIN_NAME +
+          ': Please authenticate using a desktop version of Obsidian'
+      )
+      throw PLUGIN_NAME + ': missing access token.'
     }
-    await this.taskManager.pushTask(e, this.settings)
+    await this.taskManager.pushTask(e)
     item.remove()
     new Notice('Synced with Quire!')
   }
@@ -24,7 +27,10 @@ export default class OQSync extends Plugin {
     const item = this.addStatusBarItem()
     item.createEl('span', { text: 'Syncing with Quire...' })
     if (this.settings.tokenData === undefined) {
-      new Notice(PLUGIN_NAME + ": Please authenticate using a desktop version of Obsidian");
+      new Notice(
+        PLUGIN_NAME +
+          ': Please authenticate using a desktop version of Obsidian'
+      )
       throw PLUGIN_NAME + ': missing access token.'
     }
     if (e === null) {
@@ -42,12 +48,15 @@ export default class OQSync extends Plugin {
     await this.loadSettings()
     this.taskManager = new TaskManager(this.app, this.settings)
 
-		this.addCommand({
+    this.addCommand({
       id: 'toggle-quire-task',
       name: 'Toggle Quire task',
       editorCallback: (editor: Editor, view: MarkdownView) => {
         if (this.settings.tokenData === undefined) {
-          new Notice(PLUGIN_NAME + ": Please authenticate using a desktop version of Obsidian");
+          new Notice(
+            PLUGIN_NAME +
+              ': Please authenticate using a desktop version of Obsidian'
+          )
           throw PLUGIN_NAME + ': missing access token.'
         }
         this.taskManager.toggleServerTaskStatus(editor)
@@ -79,7 +88,10 @@ export default class OQSync extends Plugin {
       name: 'Push to Quire',
       editorCallback: (editor: Editor, view: MarkdownView) => {
         if (this.settings.tokenData === undefined) {
-          new Notice(PLUGIN_NAME + ": Please authenticate using a desktop version of Obsidian");
+          new Notice(
+            PLUGIN_NAME +
+              ': Please authenticate using a desktop version of Obsidian'
+          )
           throw PLUGIN_NAME + ': missing access token.'
         }
         this.pushToQuire(editor)
@@ -90,7 +102,10 @@ export default class OQSync extends Plugin {
       name: 'Pull from Quire',
       editorCallback: (editor: Editor, view: MarkdownView) => {
         if (this.settings.tokenData === undefined) {
-          new Notice(PLUGIN_NAME + ": Please authenticate using a desktop version of Obsidian");
+          new Notice(
+            PLUGIN_NAME +
+              ': Please authenticate using a desktop version of Obsidian'
+          )
           throw PLUGIN_NAME + ': missing access token.'
         }
         this.pullFromQuire(editor)
